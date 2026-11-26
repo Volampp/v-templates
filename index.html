@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V Templates – Volamp HR Letter Studio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--m:#7a1f2b;--m2:#5e1621;--g:#d9a441;--bg:#f6f3ef;--card:#fff;--bd:#e3dcd3;--tx:#2a2a2a;--mut:#6b6b6b}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+header.top{background:var(--m);color:#fff;display:flex;align-items:center;gap:18px;padding:10px 20px;position:sticky;top:0;z-index:10;flex-wrap:wrap}
+.brand{font-size:21px;font-weight:700;letter-spacing:.5px}
+.brand span{color:var(--g)}
+.sub{color:#e9cfd3;font-size:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+nav button{background:transparent;border:0;color:#f3e6e8;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:14px}
+nav button.active,nav button:hover{background:var(--m2);color:var(--g)}
+main{padding:20px;max-width:1500px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;color:var(--m);font-size:17px}
+label{display:block;font-size:12px;color:var(--mut);margin:9px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font:inherit;background:#fff;color:var(--tx)}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--g);border-color:var(--g)}
+input:disabled,select:disabled{background:#f3f3f3}
+.btn{background:var(--m);color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font:inherit;font-weight:600}
+.btn:hover{background:var(--m2)}
+.btn.gold{background:var(--g);color:#3b2a06}
+.btn.gold:hover{background:#c99230}
+.btn.ghost{background:#fff;color:var(--m);border:1px solid var(--m)}
+.btn.ghost:hover{background:#fbf2f3}
+.btn.danger{background:#b42318}
+.btn.sm{padding:5px 10px;font-size:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.gen{display:grid;grid-template-columns:390px 1fr;gap:16px;align-items:start}
+.preview-wrap{background:#8a8580;padding:20px;border-radius:10px;overflow:auto}
+@media(min-width:1001px){.preview-wrap{position:sticky;top:70px;max-height:calc(100vh - 90px)}}
+@media(max-width:1000px){.gen{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+th{background:#faf6f0;color:var(--m2);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.ok{background:#e6f4ea;color:#1e6b34}.warn{background:#fff3d6;color:#8a5a00}
+.tpl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.tpl{border:1px solid var(--bd);border-radius:8px;padding:12px;cursor:pointer;background:#fff}
+.tpl:hover,.tpl.sel{border-color:var(--m);box-shadow:0 0 0 2px #7a1f2b22}
+.tpl .nm{font-weight:600;margin-bottom:3px}
+.muted{color:var(--mut);font-size:12px}
+.toolbar{display:flex;gap:4px;flex-wrap:wrap;padding:6px;border:1px solid var(--bd);border-bottom:0;border-radius:6px 6px 0 0;background:#faf6f0}
+.toolbar button,.toolbar select{width:auto;padding:4px 9px;border:1px solid var(--bd);background:#fff;border-radius:4px;cursor:pointer;font-size:12px}
+.editor{min-height:420px;border:1px solid var(--bd);border-radius:0 0 6px 6px;padding:18px;background:#fff;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;outline:none}
+.editor[contenteditable=false]{background:#f8f8f8;color:#444}
+.toast{position:fixed;bottom:20px;right:20px;background:#222;color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.3s;z-index:99;pointer-events:none;max-width:360px}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+.sigbox{background:#fcfaf7;border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:10px}
+.imgprev{max-height:50px;max-width:150px;border:1px dashed #ccc;padding:2px;background:#fff}
+/* ---------- Letter ---------- */
+.page{width:210mm;min-height:297mm;margin:auto;background:#fff;padding:14mm 18mm 12mm;position:relative;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.5;color:#111;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.lh{display:flex;align-items:center;gap:14px;border-bottom:3px solid #7a1f2b;padding-bottom:8px}
+.lh img{max-height:62px;max-width:150px}
+.lh .cn{font-size:18pt;font-weight:700;color:#7a1f2b;line-height:1.2}
+.lh .ca{font-size:9pt;color:#444}
+.goldbar{height:3px;background:#d9a441;margin-top:2px}
+.meta{display:flex;justify-content:space-between;margin:14px 0 8px;font-size:10.5pt}
+.lbody{text-align:justify}
+.lbody p{margin:0 0 9px}
+.lbody ul,.lbody ol{margin:0 0 9px;padding-left:22px}
+.lbody li{margin-bottom:4px}
+.lbody table.sal{border-collapse:collapse;width:100%;margin:6px 0 10px}
+.lbody table.sal th,.lbody table.sal td{border:1px solid #999;padding:4px 8px;background:none;color:#111;text-transform:none;font-size:10pt;letter-spacing:0}
+.lbody table.sal thead th{background:#f4ece0}
+.lbody table.sal .r{text-align:right}
+.sign{margin-top:18px;page-break-inside:avoid}
+.sign .imgs{min-height:64px;display:flex;align-items:center;gap:12px}
+.sign img.sig{max-height:60px;max-width:170px}
+.sign img.stamp{max-height:80px;max-width:95px;opacity:.9}
+.ack{margin-top:18px;border-top:1px dashed #888;padding-top:8px;font-size:10pt;page-break-inside:avoid}
+.lfoot{margin-top:auto;padding-top:10px;border-top:1px solid #ccc;font-size:8.5pt;color:#555;text-align:center}
+.miss{background:#ffe1e1;color:#a00;padding:0 3px;border-radius:3px}
+.wm{position:absolute;top:38%;left:0;right:0;text-align:center;font-size:90pt;color:rgba(180,0,0,.10);transform:rotate(-30deg);font-weight:800;pointer-events:none;letter-spacing:8px}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:12mm 0}
+  body{background:#fff}
+  #app,.toast{display:none!important}
+  #printArea{display:block}
+  .page{box-shadow:none;margin:0;width:210mm;min-height:272mm;padding:0 18mm}
+  .miss{background:none;color:#000}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:50}
+.lbox{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:28px;width:360px;max-width:92vw;border-top:5px solid var(--m)}
+.userbox{display:flex;align-items:center;gap:8px;font-size:12px;color:#f3e6e8}
+.userbox button{background:transparent;border:1px solid #c98a93;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px}
+.userbox button:hover{border-color:var(--g);color:var(--g)}
+#syncState{color:var(--g)}
+.btn:disabled{opacity:.6;cursor:wait}
+</style>
+</head>
+<body>
+<div id="login" class="login hidden"><div class="lbox">
+  <div class="brand" style="color:var(--m)">V <span style="color:var(--g)">Templates</span></div>
+  <p class="muted">Volamp HR Letter Studio – staff login</p>
+  <label>Email</label><input id="lEmail" type="email" autocomplete="username">
+  <label>Password</label><input id="lPass" type="password" autocomplete="current-password">
+  <button class="btn" id="lBtn" style="width:100%;margin-top:16px">Log in</button>
+  <p class="muted" id="lMsg" style="margin-top:10px"></p>
+</div></div>
+<div id="loading" class="login"><div class="lbox" style="text-align:center">Loading V Templates…</div></div>
+<div id="app" class="hidden">
+<header class="top">
+  <div><div class="brand">V <span>Templates</span></div><div class="sub">Volamp HR Letter Studio</div></div>
+  <nav id="nav">
+    <button data-tab="generate" class="active">Generate Letter</button>
+    <button data-tab="templates">Templates</button>
+    <button data-tab="employees">Employees</button>
+    <button data-tab="register">Letter Register</button>
+    <button data-tab="settings">Settings</button>
+  </nav>
+  <div class="userbox"><span id="syncState"></span><span id="who"></span><button id="syncBtn" title="Reload latest data">⟳ Refresh</button><button id="logout">Log out</button></div>
+</header>
+<main>
+
+<!-- ============ GENERATE ============ -->
+<section id="tab-generate">
+  <div class="gen">
+    <div>
+      <div class="card">
+        <h2>1. Choose letter</h2>
+        <label>Template</label><select id="gTpl"></select>
+        <div id="gTplStatus" style="margin-top:8px"></div>
+        <label>Employee (auto-fills details)</label><select id="gEmp"></select>
+        <div class="grid2">
+          <div><label>Letter date</label><input type="date" id="gDate"></div>
+          <div><label>Signed by</label><select id="gSig"></select></div>
+        </div>
+      </div>
+      <div class="card"><h2>2. Fill details</h2><div id="gFields"></div></div>
+      <div class="card">
+        <h2>3. Issue</h2>
+        <div class="row">
+          <button class="btn gold" id="gIssue">Issue &amp; Print</button>
+          <button class="btn ghost" id="gDraft">Print draft</button>
+          <button class="btn ghost" id="gClear">New / Clear</button>
+        </div>
+        <p class="muted" id="gRefInfo"></p>
+        <p class="muted">Tip: in the print window choose <b>“Save as PDF”</b> to get a PDF you can email or WhatsApp.</p>
+      </div>
+    </div>
+    <div class="preview-wrap"><div id="gPreview"></div></div>
+  </div>
+</section>
+
+<!-- ============ TEMPLATES ============ -->
+<section id="tab-templates" class="hidden">
+  <div class="card">
+    <div class="row between"><h2>Letter templates</h2><button class="btn" id="tNew">+ New template</button></div>
+    <div class="tpl-list" id="tList"></div>
+  </div>
+  <div class="card" id="tEditCard">
+    <h2 id="tEditTitle">Edit template</h2>
+    <div class="grid2">
+      <div><label>Template name</label><input id="tName"></div>
+      <div class="grid2">
+        <div><label>Short code (used in ref. no.)</label><input id="tCode" maxlength="5"></div>
+        <div><label>Category</label><select id="tCat"></select></div>
+      </div>
+    </div>
+    <label style="display:flex;gap:6px;align-items:center;color:var(--tx);font-size:13px"><input type="checkbox" id="tAck" style="width:auto"> Add employee acknowledgement / signature section at the bottom</label>
+    <div id="tLockMsg"></div>
+    <div class="toolbar" id="tToolbar">
+      <button data-cmd="bold"><b>B</b></button>
+      <button data-cmd="italic"><i>I</i></button>
+      <button data-cmd="underline"><u>U</u></button>
+      <button data-cmd="insertUnorderedList">• List</button>
+      <button data-cmd="insertOrderedList">1. List</button>
+      <button data-cmd="justifyLeft">Left</button>
+      <button data-cmd="justifyCenter">Center</button>
+      <button data-cmd="justifyFull">Justify</button>
+      <select id="tInsert"></select>
+      <button id="tCustom">+ Custom field</button>
+    </div>
+    <div class="editor" id="tEditor" contenteditable="true"></div>
+    <p class="muted">Fields are written as <b>{{field_name}}</b>. Any new field you add automatically appears in the Generate form. Auto fields: annual_ctc, salary_table, and any field ending in <b>_words</b> (e.g. {{monthly_ctc_words}} → “Rupees Twenty Five Thousand Only”).</p>
+    <div class="row">
+      <button class="btn" id="tSave">Save template</button>
+      <button class="btn gold" id="tApprove">Approve &amp; lock</button>
+      <button class="btn ghost" id="tUnlock">Unlock to edit</button>
+      <button class="btn ghost" id="tDup">Duplicate</button>
+      <button class="btn danger" id="tDel">Delete</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EMPLOYEES ============ -->
+<section id="tab-employees" class="hidden">
+  <div class="card">
+    <h2 id="eTitle">Add employee</h2>
+    <div class="grid2" id="eForm"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="eSave">Save employee</button>
+      <button class="btn ghost" id="eClear">Clear form</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="row between">
+      <h2>Employee master (<span id="eCount">0</span>)</h2>
+      <div class="row">
+        <input id="eSearch" placeholder="Search name, code, dept…" style="width:220px">
+        <button class="btn sm ghost" id="eImport">Import CSV</button>
+        <button class="btn sm ghost" id="eExport">Export CSV</button>
+        <input type="file" id="eFile" accept=".csv" class="hidden">
+      </div>
+    </div>
+    <div style="overflow:auto"><table>
+      <thead><tr><th>Code</th><th>Name</th><th>Designation</th><th>Department</th><th>Joining</th><th>Mobile</th><th style="width:190px"></th></tr></thead>
+      <tbody id="eBody"></tbody>
+    </table></div>
+    <p class="muted">CSV import columns (header row): emp_code, salutation, employee_name, designation, department, location, date_of_joining, reporting_manager, monthly_ctc, mobile, email, address. Dates can be DD-MM-YYYY or YYYY-MM-DD.</p>
+  </div>
+</section>
+
+<!-- ============ REGISTER ============ -->
+<section id="tab-register" class="hidden">
+  <div class="card">
+    <div class="row between">
+      <h2>Letter register (<span id="rCount">0</span>)</h2>
+      <div class="row">
+        <input id="rSearch" placeholder="Search ref no., name, letter…" style="width:250px">
+        <button class="btn sm ghost" id="rExport">Export CSV</button>
+      </div>
+    </div>
+    <div style="overflow:auto"><table>
+      <thead><tr><th>Ref. no.</th><th>Letter date</th><th>Employee</th><th>Letter</th><th>Signed by</th><th>Issued on</th><th style="width:150px"></th></tr></thead>
+      <tbody id="rBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="tab-settings" class="hidden">
+  <div class="card">
+    <h2>Company letterhead</h2>
+    <div class="grid2" id="sCompany"></div>
+    <label>Company logo</label>
+    <div class="row"><img id="sLogoPrev" class="imgprev hidden" alt=""><input type="file" accept="image/*" id="sLogo" style="width:auto"><button class="btn sm ghost" id="sLogoDel">Remove logo</button></div>
+  </div>
+  <div class="card">
+    <h2>Reference numbers &amp; salary structure</h2>
+    <div class="grid2" id="sNums"></div>
+    <p class="muted" id="sRefEg"></p>
+  </div>
+  <div class="card">
+    <div class="row between"><h2>Authorised signatories</h2><button class="btn sm" id="sAddSig">+ Add signatory</button></div>
+    <div id="sSigs"></div>
+  </div>
+  <div class="card">
+    <h2>Backup &amp; data</h2>
+    <p class="muted">All data is stored online in your Supabase database and shared by every logged-in HR user. You can still download a backup copy, or import a backup from the offline version of V Templates.</p>
+    <div class="row">
+      <button class="btn" id="sBackup">Download backup</button>
+      <button class="btn ghost" id="sRestore">Import backup file</button>
+      <input type="file" id="sFile" accept=".json" class="hidden">
+      <button class="btn ghost" id="sResetTpl">Restore missing default templates</button>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   STEP 1: PASTE YOUR SUPABASE DETAILS HERE
+   Supabase → Project Settings → API Keys (or the "Connect" button)
+   ===================================================================== */
+const SUPABASE_URL = 'https://ccfpkojnrrxddcyaqrvz.supabase.co';        // e.g. https://abcdxyz.supabase.co
+const SUPABASE_KEY = 'sb_publishable_Tn-bX_5DElcVvF3y86SC6w_iD8IdH-u'; // starts with sb_publishable_ or eyJ...
+/* ===================================================================== */
+
+/* ================= CONFIG ================= */
+const PH_RE = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+const CATS = ['Joining','Employment','Compensation','Disciplinary','Exit','Certificates','Other'];
+const SYSTEM = ['company_name','company_address','company_phone','company_email','hr_name','ref_no','letter_date','signatory_name','signatory_designation'];
+const COMPUTED = {annual_ctc:['monthly_ctc'], new_annual_ctc:['new_monthly_ctc'], salary_table:['monthly_ctc'], new_salary_table:['new_monthly_ctc']};
+const EMP_FIELDS = ['emp_code','salutation','employee_name','designation','department','location','date_of_joining','reporting_manager','monthly_ctc','mobile','email','address'];
+const LABELS = {
+  emp_code:'Employee code', salutation:'Salutation', employee_name:'Employee full name', designation:'Designation', department:'Department',
+  location:'Work location', date_of_joining:'Date of joining', reporting_manager:'Reporting manager', monthly_ctc:'Monthly CTC (₹)',
+  mobile:'Mobile', email:'Email', address:'Address', probation_months:'Probation (months)', offer_valid_till:'Offer valid till',
+  working_hours:'Working hours', notice_period:'Notice period (after confirmation)', confirmation_date:'Confirmation date',
+  effective_date:'Effective date', new_monthly_ctc:'New monthly CTC (₹)', new_designation:'New designation', new_location:'New location',
+  responsibilities:'Key responsibilities', warning_level:'Warning level', incident_date:'Incident date', incident_details:'Incident / misconduct details',
+  reply_within_days:'Reply within (days)', termination_reason:'Reason for termination', last_working_date:'Last working date',
+  resignation_date:'Resignation letter date', purpose:'Purpose', college_name:'College / institute', internship_start_date:'Internship start date',
+  internship_end_date:'Internship end date', project_details:'Work / project done', annual_ctc:'Annual CTC (auto)', new_annual_ctc:'New annual CTC (auto)',
+  salary_table:'Salary break-up table (auto)', new_salary_table:'New salary break-up table (auto)', company_name:'Company name (auto)',
+  company_address:'Company address (auto)', company_phone:'Company phone (auto)', company_email:'Company email (auto)', hr_name:'HR name (auto)',
+  ref_no:'Reference no. (auto)', letter_date:'Letter date (auto)', signatory_name:'Signatory name (auto)', signatory_designation:'Signatory designation (auto)'
+};
+const HINTS = {
+  purpose:'e.g. applying for a passport / bank loan', warning_level:'e.g. First / Second / Final', notice_period:'e.g. one month',
+  working_hours:'e.g. 9:30 AM to 6:30 PM', responsibilities:'e.g. Handling dealer orders, CRM follow-ups, quotations…',
+  monthly_ctc:'e.g. 25000', new_monthly_ctc:'e.g. 30000', incident_details:'Describe clearly what happened…',
+  termination_reason:'State the reason clearly…', emp_code:'e.g. VEPL-045', college_name:'e.g. M.S. University, Vadodara',
+  project_details:'e.g. Inventory data analysis, dealer survey…'
+};
+const DEFAULTS = {probation_months:'6', working_hours:'9:30 AM to 6:30 PM', notice_period:'one month', reply_within_days:'3', warning_level:'First'};
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function today(){const d=new Date();return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+function fmtDate(iso){if(!iso)return '';const d=new Date(String(iso).slice(0,10)+'T00:00:00');if(isNaN(d))return iso;return d.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});}
+function money(n){return '₹ '+Number(n).toLocaleString('en-IN',{maximumFractionDigits:0});}
+function fy(iso){const d=iso?new Date(iso+'T00:00:00'):new Date();let y=d.getFullYear();if(d.getMonth()<3)y--;return y+'-'+String(y+1).slice(2);}
+function numWords(n){
+  n=Math.round(Math.abs(Number(n)||0)); if(n===0) return 'Zero';
+  const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two=x=>x<20?a[x]:b[Math.floor(x/10)]+(x%10?' '+a[x%10]:'');
+  const three=x=>x>=100?a[Math.floor(x/100)]+' Hundred'+(x%100?' '+two(x%100):''):two(x);
+  let s='';const cr=Math.floor(n/1e7);n%=1e7;const lk=Math.floor(n/1e5);n%=1e5;const th=Math.floor(n/1000);n%=1000;
+  if(cr)s+=numWords(cr)+' Crore ';if(lk)s+=two(lk)+' Lakh ';if(th)s+=two(th)+' Thousand ';if(n)s+=three(n);
+  return s.trim();
+}
+function label(k){if(LABELS[k])return LABELS[k];if(k.endsWith('_words'))return label(k.slice(0,-6)).replace(' (auto)','').replace(' (₹)','')+' in words (auto)';const s=k.replace(/_/g,' ');return s.charAt(0).toUpperCase()+s.slice(1);}
+function fieldType(k){
+  if(k==='salutation')return 'sal';
+  if(/date|till/.test(k))return 'date';
+  if(/ctc|salary|amount|stipend|bonus/.test(k))return 'money';
+  if(/_days$|_months$/.test(k))return 'number';
+  if(/address|details|reason|responsibilit|remarks/.test(k))return 'area';
+  return 'text';
+}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),3500);}
+function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);}
+function csvCell(v){return '"'+String(v??'').replace(/"/g,'""')+'"';}
+function parseCSV(txt){
+  txt=txt.replace(/^﻿/,'');const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<txt.length;i++){const c=txt[i];
+    if(q){if(c==='"'){if(txt[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else{if(c==='"')q=true;else if(c===','){row.push(f);f=''}else if(c==='\n'){row.push(f);rows.push(row);row=[];f=''}else if(c!=='\r')f+=c}}
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>String(x).trim()!==''));
+}
+function normDate(v){v=String(v||'').trim();let m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');return v;}
+function readImage(file,maxW){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const sc=Math.min(1,maxW/img.width);const c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/png'))};img.src=fr.result};fr.readAsDataURL(file)});}
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+function setSync(msg){$('syncState').textContent=msg;}
+
+/* ================= DATABASE (Supabase) ================= */
+let db=null;
+async function q(req){
+  const {data,error}=await req;
+  if(error){console.error(error);toast('Database error: '+error.message);setSync('⚠ Not saved');throw error;}
+  return data;
+}
+function cleanEmp(d){const o={};EMP_FIELDS.forEach(k=>{let v=d[k];if(v===undefined)return;v=typeof v==='string'?v.trim():v;if((k==='date_of_joining'||k==='monthly_ctc')&&(v===''||v==null))v=null;o[k]=v;});return o;}
+const mapLetter=r=>({id:r.id,ref:r.ref_no,date:r.letter_date,tplId:r.template_id,tplName:r.template_name,employee:r.employee,emp_code:r.emp_code,sigId:r.signatory_id,signed_by:r.signed_by,vals:r.vals||{},reprints:r.reprints||0,issued_at:r.issued_at,issued_by:r.issued_by_email});
+
+/* ================= DEFAULT DATA ================= */
+function defaultSettings(){return{
+  company_name:'Volamp Elektrikals Pvt. Ltd.', company_address:'Registered office address, City, State – PIN code',
+  company_phone:'', company_email:'', company_website:'', company_cin:'', company_gstin:'', hr_name:'', logo:'',
+  ref_prefix:'VEPL/HR', basic_pct:50, hra_pct:40
+};}
+const TO_EXT='<p><b>To,</b><br>{{salutation}} {{employee_name}}<br>{{address}}</p>';
+const TO_INT='<p><b>To,</b><br>{{salutation}} {{employee_name}}<br>{{designation}}, {{department}}<br>Employee Code: {{emp_code}}</p>';
+const DEAR='<p>Dear {{salutation}} {{employee_name}},</p>';
+const TWIMC='<p style="text-align:center"><b><u>TO WHOM IT MAY CONCERN</u></b></p>';
+const subj=s=>'<p style="text-align:center"><b><u>Subject: '+s+'</u></b></p>';
+function mk(key,name,code,category,ack,body){return{key,name,code,category,ack,approved:true,approved_by:'Default (pre-approved)',approved_on:today(),builtin:true,body};}
+function defaultTemplates(){return[
+mk('offer','Offer Letter','OFR','Joining',true, TO_EXT+subj('Offer of Employment')+DEAR+
+`<p>With reference to your application and the subsequent discussions, we are pleased to offer you the position of <b>{{designation}}</b> in the <b>{{department}}</b> department of {{company_name}}, based at <b>{{location}}</b>.</p>
+<p>The key terms of this offer are:</p>
+<ul><li><b>Date of joining:</b> {{date_of_joining}}</li><li><b>Reporting to:</b> {{reporting_manager}}</li><li><b>Annual CTC:</b> {{annual_ctc}} ({{annual_ctc_words}})</li><li><b>Probation period:</b> {{probation_months}} months from the date of joining</li></ul>
+<p>The salary break-up is as follows:</p>{{salary_table}}
+<p>A detailed appointment letter will be issued on joining. Please bring the following documents on your date of joining: PAN card, Aadhaar card, educational certificates, relieving letter and last 3 months' salary slips from your previous employer (if applicable), 2 passport-size photographs and a cancelled cheque.</p>
+<p>This offer is valid till <b>{{offer_valid_till}}</b>. Kindly sign and return a copy of this letter as a token of your acceptance.</p>
+<p>We look forward to welcoming you on board.</p>`),
+mk('appointment','Appointment Letter','APT','Joining',true, TO_EXT+subj('Letter of Appointment')+DEAR+
+`<p>Further to our offer and your acceptance, we are pleased to appoint you as <b>{{designation}}</b> in the <b>{{department}}</b> department with effect from <b>{{date_of_joining}}</b>, on the following terms and conditions:</p>
+<ol><li><b>Place of work:</b> Your initial posting will be at {{location}}. The company may transfer you to any of its offices, godowns, branches or associate concerns anywhere in India as per business requirements.</li>
+<li><b>Remuneration:</b> Your annual CTC will be {{annual_ctc}} ({{annual_ctc_words}}) as per the break-up below. Statutory deductions (PF, ESIC, Professional Tax, TDS) shall be made as applicable.{{salary_table}}</li>
+<li><b>Probation:</b> You will be on probation for {{probation_months}} months, which may be extended at the discretion of the management. Confirmation will be communicated to you in writing.</li>
+<li><b>Working hours:</b> {{working_hours}}, six days a week, or as per company policy.</li>
+<li><b>Leave:</b> You will be entitled to leave as per the company's leave policy in force from time to time.</li>
+<li><b>Notice period:</b> During probation, either party may end the employment with 15 days' notice. After confirmation, either party may end the employment by giving {{notice_period}} notice or salary in lieu thereof.</li>
+<li><b>Confidentiality:</b> You shall not disclose any information about the company's customers, dealers, pricing, suppliers, stock or business to any outside person, during or after your employment.</li>
+<li><b>Conduct:</b> You shall follow the company's rules, policies and code of conduct. Any misconduct may lead to disciplinary action, including termination.</li>
+<li><b>Company property:</b> All company property, documents, data and devices in your possession must be returned at the time of leaving.</li></ol>
+<p>Please sign the duplicate copy of this letter as a token of your acceptance of the above terms. We wish you a successful career with us.</p>`),
+mk('confirmation','Confirmation Letter','CNF','Employment',false, TO_INT+subj('Confirmation of Employment')+DEAR+
+`<p>We are pleased to inform you that, on review of your performance during the probation period, the management has decided to confirm your services as <b>{{designation}}</b> with effect from <b>{{confirmation_date}}</b>.</p>
+<p>All other terms and conditions of your appointment remain unchanged. We appreciate your contribution and look forward to your continued commitment.</p><p>Congratulations!</p>`),
+mk('increment','Increment / Salary Revision Letter','INC','Compensation',false, TO_INT+subj('Revision of Salary')+DEAR+
+`<p>In recognition of your performance and contribution, the management is pleased to revise your compensation with effect from <b>{{effective_date}}</b>.</p>
+<p>Your revised monthly CTC will be <b>{{new_monthly_ctc}}</b>, i.e. an annual CTC of <b>{{new_annual_ctc}}</b> ({{new_annual_ctc_words}}). The revised break-up is:</p>{{new_salary_table}}
+<p>All other terms and conditions of your employment remain unchanged. Your compensation details are confidential and should not be discussed with others.</p>
+<p>We appreciate your efforts and wish you continued success.</p>`),
+mk('promotion','Promotion Letter','PRM','Compensation',false, TO_INT+subj('Promotion')+DEAR+
+`<p>We are pleased to inform you that, in recognition of your performance and dedication, you have been promoted from <b>{{designation}}</b> to <b>{{new_designation}}</b> with effect from <b>{{effective_date}}</b>.</p>
+<p>Consequent to this promotion, your revised monthly CTC will be <b>{{new_monthly_ctc}}</b> (annual CTC {{new_annual_ctc}}). In your new role you will report to <b>{{reporting_manager}}</b>.</p>
+<p><b>Your key responsibilities will include:</b><br>{{responsibilities}}</p>
+<p>All other terms of your employment remain unchanged. Congratulations, and we wish you success in your new role.</p>`),
+mk('transfer','Transfer Letter','TRF','Employment',false, TO_INT+subj('Transfer Order')+DEAR+
+`<p>Owing to business requirements, you are hereby transferred from <b>{{location}}</b> to <b>{{new_location}}</b> with effect from <b>{{effective_date}}</b>.</p>
+<p>You are requested to hand over your current responsibilities before relieving and to report to <b>{{reporting_manager}}</b> at the new location on the effective date.</p>
+<p>Your designation, salary and other terms of employment remain unchanged. We wish you all the best in your new assignment.</p>`),
+mk('warning','Warning Letter','WRN','Disciplinary',true, TO_INT+subj('{{warning_level}} Warning Letter')+DEAR+
+`<p>It has been brought to the notice of the management that on <b>{{incident_date}}</b> the following incident / misconduct occurred on your part:</p>
+<p>{{incident_details}}</p>
+<p>This is a violation of the company's rules and code of conduct and is not acceptable. This letter is issued to you as a formal warning, and a copy is being placed in your personnel file.</p>
+<p>You are advised to improve your conduct immediately. Any repetition will lead to strict disciplinary action, which may include suspension or termination of employment.</p>
+<p>Please acknowledge receipt of this letter.</p>`),
+mk('showcause','Show Cause Notice','SCN','Disciplinary',true, TO_INT+subj('Show Cause Notice')+DEAR+
+`<p>It has been reported that on <b>{{incident_date}}</b>:</p><p>{{incident_details}}</p>
+<p>The above act, if proved, amounts to misconduct under the company's rules. You are hereby directed to submit your written explanation within <b>{{reply_within_days}} days</b> of receipt of this notice, stating why disciplinary action should not be taken against you.</p>
+<p>If no reply is received within this time, it will be presumed that you have no explanation to offer, and the management will take appropriate action without further reference to you.</p>`),
+mk('termination','Termination Letter','TRM','Exit',true, TO_INT+subj('Termination of Employment')+DEAR+
+`<p>The management has decided to terminate your services with {{company_name}} for the following reason(s):</p><p>{{termination_reason}}</p>
+<p>Your employment will stand terminated with effect from the close of working hours on <b>{{last_working_date}}</b>.</p>
+<p>You are required to return all company property, including documents, ID card, keys, mobile phone/SIM, laptop, samples and customer data, to the HR department. Your full and final settlement will be processed as per company policy after completion of clearance formalities.</p>`),
+mk('resignation','Resignation Acceptance Letter','RSA','Exit',false, TO_INT+subj('Acceptance of Resignation')+DEAR+
+`<p>This is with reference to your resignation letter dated <b>{{resignation_date}}</b>. The management has accepted your resignation, and you will be relieved from your duties at the close of working hours on <b>{{last_working_date}}</b>.</p>
+<p>Please complete the handover of your responsibilities, files and company property to {{reporting_manager}} and obtain clearance from all departments before your last working day. Your full and final settlement will be processed after clearance, and your relieving and experience letters will be issued thereafter.</p>
+<p>We thank you for your contribution and wish you success in your future endeavours.</p>`),
+mk('relieving','Relieving Letter','RLV','Exit',false, TO_EXT+subj('Relieving Letter')+DEAR+
+`<p>This is to confirm that you have been relieved from the services of {{company_name}} at the close of working hours on <b>{{last_working_date}}</b>, consequent to the acceptance of your resignation.</p>
+<p>You were employed with us as <b>{{designation}}</b> in the {{department}} department from <b>{{date_of_joining}}</b> to <b>{{last_working_date}}</b> (Employee Code: {{emp_code}}).</p>
+<p>We confirm that you have completed all exit formalities. We thank you for your services and wish you all the best.</p>`),
+mk('experience','Experience Certificate','EXP','Certificates',false, TWIMC+
+`<p>This is to certify that <b>{{salutation}} {{employee_name}}</b> (Employee Code: {{emp_code}}) was employed with {{company_name}} from <b>{{date_of_joining}}</b> to <b>{{last_working_date}}</b>. At the time of leaving, the designation held was <b>{{designation}}</b> in the {{department}} department.</p>
+<p><b>Key responsibilities handled:</b><br>{{responsibilities}}</p>
+<p>During this tenure we found {{salutation}} {{employee_name}} to be sincere, hardworking and of good conduct. We wish every success in future endeavours.</p>`),
+mk('salarycert','Salary Certificate','SAL','Certificates',false, TWIMC+
+`<p>This is to certify that <b>{{salutation}} {{employee_name}}</b> (Employee Code: {{emp_code}}) is employed with {{company_name}} as <b>{{designation}}</b> in the {{department}} department since <b>{{date_of_joining}}</b>.</p>
+<p>The current monthly CTC is <b>{{monthly_ctc}}</b> ({{monthly_ctc_words}}), i.e. an annual CTC of {{annual_ctc}}. The break-up is:</p>{{salary_table}}
+<p>This certificate is issued at the request of the employee for the purpose of <b>{{purpose}}</b>, without any liability on the part of the company.</p>`),
+mk('noc','No Objection Certificate (NOC)','NOC','Certificates',false, TWIMC+
+`<p>This is to certify that <b>{{salutation}} {{employee_name}}</b> (Employee Code: {{emp_code}}) is working with {{company_name}} as <b>{{designation}}</b> since <b>{{date_of_joining}}</b>.</p>
+<p>The company has no objection to the employee <b>{{purpose}}</b>.</p>
+<p>This certificate is issued at the request of the employee, without any financial or legal liability on the part of the company.</p>`),
+mk('internship','Internship Certificate','INT','Certificates',false, TWIMC+
+`<p>This is to certify that <b>{{salutation}} {{employee_name}}</b>, a student of {{college_name}}, has successfully completed an internship with {{company_name}} in the <b>{{department}}</b> department from <b>{{internship_start_date}}</b> to <b>{{internship_end_date}}</b>.</p>
+<p><b>Work done during the internship:</b><br>{{project_details}}</p>
+<p>We found the intern to be sincere, punctual and eager to learn, and we wish every success in the future.</p>`)
+];}
+
+
+/* ================= STATE ================= */
+const state={settings:defaultSettings(),templates:[],employees:[],register:[]};
+async function loadSettings(){
+  let row=await q(db.from('settings').select('*').eq('id',1).maybeSingle());
+  if(!row)row=await q(db.from('settings').insert({id:1,data:{}}).select().single());
+  const sigs=state.settings.signatories;
+  state.settings=Object.assign(defaultSettings(),row.data||{},{next_seq:row.next_seq,signatories:sigs||[]});
+  if(!row.data||!row.data.ref_prefix){const {signatories,next_seq,...data}=state.settings;await q(db.from('settings').update({data}).eq('id',1));}
+}
+async function loadSignatories(){
+  let sigs=await q(db.from('signatories').select('*').order('created_at'));
+  if(!sigs.length)sigs=await q(db.from('signatories').insert({name:'Naimil',designation:'Chief Executive Officer'}).select());
+  state.settings.signatories=sigs;
+}
+async function loadTemplates(){
+  let t=await q(db.from('templates').select('*').order('name'));
+  if(!t.length){await q(db.from('templates').upsert(defaultTemplates(),{onConflict:'key',ignoreDuplicates:true}));t=await q(db.from('templates').select('*').order('name'));}
+  state.templates=t;
+}
+async function loadEmployees(){state.employees=await q(db.from('employees').select('*').order('employee_name'));}
+async function loadLetters(){state.register=(await q(db.from('letters').select('*').order('issued_at',{ascending:false}).limit(5000))).map(mapLetter);}
+async function loadAll(){setSync('Loading…');await loadSettings();await Promise.all([loadSignatories(),loadTemplates(),loadEmployees(),loadLetters()]);setSync('✔ Synced');}
+const saveSettingsData=debounce(async()=>{const {signatories,next_seq,...data}=state.settings;setSync('Saving…');await q(db.from('settings').update({data,updated_at:new Date().toISOString()}).eq('id',1));setSync('✔ Saved');},700);
+const saveNextSeq=debounce(async()=>{setSync('Saving…');await q(db.from('settings').update({next_seq:Number(state.settings.next_seq)||1}).eq('id',1));setSync('✔ Saved');},700);
+
+/* ================= TEMPLATE ENGINE ================= */
+function placeholders(body){return [...new Set([...String(body).matchAll(PH_RE)].map(m=>m[1]))];}
+function depsOf(k){if(k.endsWith('_words'))return depsOf(k.slice(0,-6));if(COMPUTED[k])return COMPUTED[k].flatMap(depsOf);return [k];}
+function fieldsFor(t){const out=[];placeholders(t.body).forEach(k=>{if(SYSTEM.includes(k))return;depsOf(k).forEach(d=>{if(!SYSTEM.includes(d)&&!out.includes(d))out.push(d)})});if(t.ack&&!out.includes('employee_name'))out.push('employee_name');return out;}
+function rawNum(k,vals){
+  if(k==='annual_ctc'||k==='new_annual_ctc'){const b=rawNum(COMPUTED[k][0],vals);return b==null?null:b*12;}
+  const v=vals[k];if(v==null||String(v).trim()===''||isNaN(Number(v)))return null;return Number(v);
+}
+function salaryTable(m){
+  const s=state.settings;const basic=Math.round(m*Number(s.basic_pct||0)/100);const hra=Math.round(basic*Number(s.hra_pct||0)/100);const sp=m-basic-hra;
+  const f=n=>Number(n).toLocaleString('en-IN');
+  const rows=[['Basic salary',basic],['House rent allowance (HRA)',hra],['Special allowance',sp]];
+  return '<table class="sal"><thead><tr><th>Component</th><th class="r">Monthly (₹)</th><th class="r">Annual (₹)</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td>'+r[0]+'</td><td class="r">'+f(r[1])+'</td><td class="r">'+f(r[1]*12)+'</td></tr>').join('')+
+    '<tr><th>Total CTC</th><th class="r">'+f(m)+'</th><th class="r">'+f(m*12)+'</th></tr></tbody></table>';
+}
+function resolve(k,vals,ctx){
+  if(Object.prototype.hasOwnProperty.call(ctx,k))return ctx[k]?esc(ctx[k]):null;
+  if(k.endsWith('_words')){const n=rawNum(k.slice(0,-6),vals);return n==null?null:'Rupees '+numWords(n)+' Only';}
+  if(k==='annual_ctc'||k==='new_annual_ctc'){const n=rawNum(k,vals);return n==null?null:money(n);}
+  if(k==='salary_table'||k==='new_salary_table'){const n=rawNum(COMPUTED[k][0],vals);return n==null?null:salaryTable(n);}
+  const v=vals[k];if(v==null||String(v).trim()==='')return null;
+  const ty=fieldType(k);
+  if(ty==='date')return esc(fmtDate(v));
+  if(ty==='money')return isNaN(Number(v))?esc(v):money(v);
+  if(ty==='area')return esc(v).replace(/\n/g,'<br>');
+  return esc(v);
+}
+function letterHTML(t,vals,o){
+  const s=state.settings;const sig=s.signatories.find(x=>x.id===o.sigId)||s.signatories[0]||{};
+  const ctx={company_name:s.company_name,company_address:s.company_address,company_phone:s.company_phone,company_email:s.company_email,hr_name:s.hr_name,ref_no:o.ref,letter_date:fmtDate(o.date),signatory_name:sig.name,signatory_designation:sig.designation};
+  const miss=k=>o.forPrint?'__________':'<span class="miss">['+esc(label(k))+']</span>';
+  const body=String(t.body).replace(PH_RE,(m,k)=>{const v=resolve(k,vals,ctx);return v==null||v===''?miss(k):v;});
+  const contact=[s.company_phone&&('Ph: '+s.company_phone),s.company_email,s.company_website].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+  const legal=[s.company_cin&&('CIN: '+s.company_cin),s.company_gstin&&('GSTIN: '+s.company_gstin)].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+  const nm=[vals.salutation,vals.employee_name].filter(Boolean).join(' ');
+  const ackLine=t.category==='Joining'?'I have received and read this letter and accept the terms and conditions mentioned above.':'I acknowledge receipt of this letter and have understood its contents.';
+  return '<div class="page">'+(o.draft?'<div class="wm">DRAFT</div>':'')+
+    '<div class="lh">'+(s.logo?'<img src="'+s.logo+'" alt="">':'')+'<div><div class="cn">'+esc(s.company_name)+'</div><div class="ca">'+esc(s.company_address)+'</div>'+(contact?'<div class="ca">'+contact+'</div>':'')+'</div></div><div class="goldbar"></div>'+
+    '<div class="meta"><div><b>Ref. No.:</b> '+esc(o.ref||'')+'</div><div><b>Date:</b> '+esc(fmtDate(o.date))+'</div></div>'+
+    '<div class="lbody">'+body+'</div>'+
+    '<div class="sign"><div>For <b>'+esc(s.company_name)+'</b></div><div class="imgs">'+(sig.signature?'<img class="sig" src="'+sig.signature+'" alt="">':'')+(sig.stamp?'<img class="stamp" src="'+sig.stamp+'" alt="">':'')+'</div><div><b>'+esc(sig.name||'Authorised Signatory')+'</b><br>'+esc(sig.designation||'')+'</div></div>'+
+    (t.ack?'<div class="ack"><b>Employee acknowledgement</b><br>'+ackLine+'<br><br>Signature: ______________________ &nbsp;&nbsp; Name: '+(nm?esc(nm):'______________________')+' &nbsp;&nbsp; Date: ______________</div>':'')+
+    '<div class="lfoot">'+(legal||'&nbsp;')+'</div></div>';
+}
+function nextRef(t,date){const s=state.settings;return (s.ref_prefix||'HR')+'/'+(t.code||'GEN')+'/'+fy(date)+'/'+String(s.next_seq||1).padStart(3,'0');}
+function doPrint(html){
+  const pa=$('printArea');pa.innerHTML=html;
+  const imgs=[...pa.querySelectorAll('img')];
+  Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>setTimeout(()=>window.print(),150));
+}
+function fieldHTML(k,v,attr){
+  attr=attr||'data-k';const ty=fieldType(k),lb=esc(label(k)),ph=esc(HINTS[k]||'');v=v??'';
+  if(ty==='sal')return '<div><label>'+lb+'</label><select '+attr+'="'+k+'">'+['','Mr.','Ms.','Mrs.','Dr.'].map(o=>'<option value="'+o+'"'+(o===v?' selected':'')+'>'+(o||'—')+'</option>').join('')+'</select></div>';
+  if(ty==='area')return '<div><label>'+lb+'</label><textarea '+attr+'="'+k+'" placeholder="'+ph+'">'+esc(v)+'</textarea></div>';
+  const it=ty==='date'?'date':(ty==='money'||ty==='number')?'number':'text';
+  return '<div><label>'+lb+'</label><input type="'+it+'" '+attr+'="'+k+'" value="'+esc(v)+'" placeholder="'+ph+'"></div>';
+}
+function catOf(t){return CATS.includes(t.category)?t.category:'Other';}
+
+/* ================= TABS ================= */
+const TABS=['generate','templates','employees','register','settings'];
+function showTab(t){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  TABS.forEach(x=>$('tab-'+x).classList.toggle('hidden',x!==t));
+  ({generate:initGenerate,templates:renderTplList,employees:renderEmployees,register:renderRegister,settings:renderSettings})[t]();
+  window.scrollTo(0,0);
+  if(t==='register')loadLetters().then(renderRegister).catch(()=>{});
+  if(t==='employees')loadEmployees().then(renderEmployees).catch(()=>{});
+  if(t==='settings')loadSettings().then(renderSettings).catch(()=>{});
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* ================= GENERATE ================= */
+const G={tplId:null,vals:{},reprintId:null,empId:''};
+const curTpl=()=>state.templates.find(t=>t.id===G.tplId);
+function initGenerate(){
+  const ts=state.templates;
+  if(!curTpl())G.tplId=ts[0]?ts[0].id:null;
+  $('gTpl').innerHTML=CATS.map(c=>{const l=ts.filter(t=>catOf(t)===c);return l.length?'<optgroup label="'+c+'">'+l.map(t=>'<option value="'+t.id+'">'+esc(t.name)+(t.approved?'':' (draft)')+'</option>').join('')+'</optgroup>':''}).join('');
+  if(G.tplId)$('gTpl').value=G.tplId;
+  $('gEmp').innerHTML='<option value="">— Type details manually —</option>'+state.employees.map(e=>'<option value="'+e.id+'">'+esc(e.employee_name)+(e.emp_code?' ('+esc(e.emp_code)+')':'')+'</option>').join('');
+  $('gEmp').value=state.employees.find(e=>e.id===G.empId)?G.empId:'';
+  const sv=$('gSig').value;
+  $('gSig').innerHTML=state.settings.signatories.map(g=>'<option value="'+g.id+'">'+esc(g.name)+' – '+esc(g.designation)+'</option>').join('')||'<option value="">(add in Settings)</option>';
+  if(sv&&state.settings.signatories.find(g=>g.id===sv))$('gSig').value=sv;
+  if(!$('gDate').value)$('gDate').value=today();
+  renderFields();renderPreview();
+}
+function renderFields(){
+  const t=curTpl();
+  if(!t){$('gFields').innerHTML='<p class="muted">No templates. Add one in the Templates tab.</p>';$('gPreview').innerHTML='';return;}
+  const keys=fieldsFor(t);
+  keys.forEach(k=>{if((G.vals[k]==null||G.vals[k]==='')&&DEFAULTS[k]!==undefined)G.vals[k]=DEFAULTS[k]});
+  $('gFields').innerHTML=keys.length?keys.map(k=>fieldHTML(k,G.vals[k])).join('')+'<div class="row" style="margin-top:12px"><button class="btn sm ghost" id="gSaveEmp">Save this person to Employees</button></div>':'<p class="muted">This template has no fields to fill.</p>';
+  $('gFields').querySelectorAll('[data-k]').forEach(el=>{const h=()=>{G.vals[el.dataset.k]=el.value;renderPreview()};el.addEventListener('input',h);el.addEventListener('change',h);});
+  const se=$('gSaveEmp');if(se)se.onclick=saveEmpFromGen;
+  $('gTplStatus').innerHTML=t.approved?'<span class="badge ok">🔒 Approved by '+esc(t.approved_by)+' on '+esc(fmtDate(t.approved_on))+'</span>':'<span class="badge warn">Draft – not approved. Only “Print draft” is allowed.</span>';
+  $('gIssue').textContent=G.reprintId?'Reprint (same ref. no.)':'Issue & Print';
+}
+function renderPreview(){
+  const t=curTpl();if(!t)return;
+  const reg=G.reprintId&&state.register.find(r=>r.id===G.reprintId);
+  const date=$('gDate').value||today();
+  const ref=reg?reg.ref:nextRef(t,date);
+  $('gPreview').innerHTML=letterHTML(t,G.vals,{ref,date,sigId:$('gSig').value,draft:!t.approved});
+  $('gRefInfo').innerHTML=reg?'Reprinting <b>'+esc(ref)+'</b>. Any changes you make will update this register entry.':'Expected ref. no. <b>'+esc(ref)+'</b> – the final number is given by the database when you click Issue &amp; Print.';
+}
+$('gTpl').onchange=e=>{G.tplId=e.target.value;G.reprintId=null;renderFields();renderPreview();};
+$('gEmp').onchange=e=>{G.empId=e.target.value;G.reprintId=null;const emp=state.employees.find(x=>x.id===G.empId);if(emp)EMP_FIELDS.forEach(k=>{if(emp[k]!=null&&emp[k]!=='')G.vals[k]=String(emp[k])});renderFields();renderPreview();};
+$('gDate').onchange=renderPreview;$('gSig').onchange=renderPreview;
+$('gClear').onclick=()=>{G.vals={};G.empId='';G.reprintId=null;$('gDate').value=today();initGenerate();toast('Form cleared');};
+$('gDraft').onclick=()=>{const t=curTpl();if(!t)return;doPrint(letterHTML(t,G.vals,{ref:'DRAFT',date:$('gDate').value||today(),sigId:$('gSig').value,draft:true}));};
+$('gIssue').onclick=async()=>{
+  const t=curTpl();if(!t)return;
+  if(!t.approved){toast('This template is not approved yet. Approve it in the Templates tab, or use “Print draft”.');return;}
+  if(!state.settings.signatories.length){toast('Add an authorised signatory in Settings first.');return;}
+  const miss=fieldsFor(t).filter(k=>G.vals[k]==null||String(G.vals[k]).trim()==='');
+  if(miss.length&&!confirm('These fields are empty:\n• '+miss.map(label).join('\n• ')+'\n\nIssue anyway?'))return;
+  const date=$('gDate').value||today(),sigId=$('gSig').value||null;
+  const sig=state.settings.signatories.find(g=>g.id===sigId)||{};
+  const emp=[G.vals.salutation,G.vals.employee_name].filter(Boolean).join(' ');
+  const btn=$('gIssue');btn.disabled=true;setSync('Saving…');
+  try{
+    let row;const reg=G.reprintId&&state.register.find(r=>r.id===G.reprintId);
+    if(reg){
+      row=await q(db.from('letters').update({vals:{...G.vals},letter_date:date,signatory_id:sigId,signed_by:sig.name||'',employee:emp,emp_code:G.vals.emp_code||'',reprints:(reg.reprints||0)+1}).eq('id',reg.id).select().single());
+      Object.assign(reg,mapLetter(row));
+    }else{
+      row=await q(db.rpc('issue_letter',{p_code:t.code,p_letter_date:date,p_template_id:t.id,p_template_name:t.name,p_employee:emp,p_emp_code:G.vals.emp_code||'',p_signatory_id:sigId,p_signed_by:sig.name||'',p_vals:{...G.vals}}));
+      if(Array.isArray(row))row=row[0];
+      state.register.unshift(mapLetter(row));G.reprintId=row.id;state.settings.next_seq=Number(state.settings.next_seq||1)+1;
+    }
+    setSync('✔ Saved');renderFields();renderPreview();toast('Issued: '+row.ref_no);
+    doPrint(letterHTML(t,G.vals,{ref:row.ref_no,date,sigId,draft:false,forPrint:true}));
+  }catch(e){}finally{btn.disabled=false;}
+};
+async function saveEmpFromGen(){
+  if(!G.vals.employee_name){toast('Enter the employee name first');return;}
+  const data=cleanEmp(G.vals);
+  const ex=G.empId&&state.employees.find(e=>e.id===G.empId);
+  const row=ex?await q(db.from('employees').update(data).eq('id',ex.id).select().single()):await q(db.from('employees').insert(data).select().single());
+  if(ex)Object.assign(ex,row);else state.employees.push(row);
+  G.empId=row.id;initGenerate();toast('Saved to Employees');
+}
+
+/* ================= TEMPLATES ================= */
+const T={selId:null,range:null};
+function allFieldKeys(){const s=new Set([...EMP_FIELDS,...Object.keys(LABELS)]);state.templates.forEach(t=>placeholders(t.body).forEach(k=>s.add(k)));return [...s];}
+function renderTplList(){
+  const ts=state.templates;if(!ts.find(t=>t.id===T.selId))T.selId=ts[0]?ts[0].id:null;
+  $('tList').innerHTML=ts.map(t=>'<div class="tpl'+(t.id===T.selId?' sel':'')+'" data-id="'+t.id+'"><div class="nm">'+esc(t.name)+'</div><div class="muted">'+esc(catOf(t))+' · Code '+esc(t.code)+'</div><div style="margin-top:6px">'+(t.approved?'<span class="badge ok">🔒 Approved</span>':'<span class="badge warn">Draft</span>')+'</div></div>').join('')||'<p class="muted">No templates yet.</p>';
+  $('tList').querySelectorAll('.tpl').forEach(el=>el.onclick=()=>{T.selId=el.dataset.id;renderTplList();$('tEditCard').scrollIntoView({behavior:'smooth'});});
+  $('tCat').innerHTML=CATS.map(c=>'<option>'+c+'</option>').join('');
+  loadTplEditor();
+}
+function loadTplEditor(){
+  const t=state.templates.find(x=>x.id===T.selId);$('tEditCard').classList.toggle('hidden',!t);if(!t)return;
+  $('tEditTitle').textContent='Edit: '+t.name;$('tName').value=t.name;$('tCode').value=t.code||'';$('tCat').value=catOf(t);$('tAck').checked=!!t.ack;$('tEditor').innerHTML=t.body;
+  const locked=!!t.approved;
+  ['tName','tCode','tCat','tAck'].forEach(i=>$(i).disabled=locked);
+  $('tEditor').contentEditable=String(!locked);
+  $('tToolbar').style.opacity=locked?.45:1;$('tToolbar').style.pointerEvents=locked?'none':'auto';
+  $('tSave').classList.toggle('hidden',locked);$('tApprove').classList.toggle('hidden',locked);$('tUnlock').classList.toggle('hidden',!locked);
+  $('tLockMsg').innerHTML=locked?'<p><span class="badge ok">🔒 Approved by '+esc(t.approved_by)+' on '+esc(fmtDate(t.approved_on))+'</span> <span class="muted">Locked. Unlock to make changes (it will need approval again).</span></p>':'<p class="muted">Draft – edit freely, click Save, then “Approve &amp; lock” so HR can issue it.</p>';
+  $('tInsert').innerHTML='<option value="">+ Insert field…</option>'+allFieldKeys().map(k=>'<option value="'+k+'">'+esc(label(k))+'</option>').join('');
+}
+document.addEventListener('selectionchange',()=>{const sel=getSelection();if(sel.rangeCount&&$('tEditor').contains(sel.anchorNode))T.range=sel.getRangeAt(0).cloneRange();});
+function insertField(k){const ed=$('tEditor');ed.focus();if(T.range){const sel=getSelection();sel.removeAllRanges();sel.addRange(T.range);}document.execCommand('insertText',false,'{{'+k+'}}');}
+$('tToolbar').querySelectorAll('button[data-cmd]').forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>{$('tEditor').focus();document.execCommand(b.dataset.cmd,false,null);};});
+$('tInsert').onchange=e=>{const k=e.target.value;e.target.value='';if(k)insertField(k);};
+$('tCustom').onmousedown=e=>e.preventDefault();
+$('tCustom').onclick=()=>{let n=prompt('New field name (e.g. bonus_amount, joining_bonus, vehicle_number):');if(!n)return;n=n.trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');if(n)insertField(n);};
+function selTpl(){return state.templates.find(x=>x.id===T.selId);}
+async function updTpl(t,patch){const row=await q(db.from('templates').update({...patch,updated_at:new Date().toISOString()}).eq('id',t.id).select().single());Object.assign(t,row);return t;}
+function editorPatch(){return{name:$('tName').value.trim()||'Untitled template',code:($('tCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'')||'GEN'),category:$('tCat').value,ack:$('tAck').checked,body:$('tEditor').innerHTML};}
+$('tSave').onclick=async()=>{const t=selTpl();if(!t)return;await updTpl(t,editorPatch());renderTplList();toast('Template saved');};
+$('tApprove').onclick=async()=>{const t=selTpl();if(!t)return;const def=(state.settings.signatories[0]||{}).name||'';const who=prompt('Approved by (name & designation):',def);if(!who)return;await updTpl(t,{...editorPatch(),approved:true,approved_by:who.trim(),approved_on:today()});renderTplList();toast('Template approved & locked');};
+$('tUnlock').onclick=async()=>{const t=selTpl();if(!t)return;if(!confirm('Unlocking removes the approval. The template must be approved again before letters can be issued. Continue?'))return;await updTpl(t,{approved:false,approved_by:'',approved_on:null});renderTplList();};
+$('tDup').onclick=async()=>{const t=selTpl();if(!t)return;const row=await q(db.from('templates').insert({name:t.name+' (copy)',code:t.code,category:t.category,ack:t.ack,body:t.body,approved:false,builtin:false}).select().single());state.templates.push(row);T.selId=row.id;renderTplList();toast('Duplicated – edit and approve it');};
+$('tDel').onclick=async()=>{const t=selTpl();if(!t)return;if(!confirm('Delete template “'+t.name+'”? Letters already issued stay in the register.'))return;await q(db.from('templates').delete().eq('id',t.id));state.templates=state.templates.filter(x=>x.id!==t.id);if(G.tplId===t.id)G.tplId=null;T.selId=null;renderTplList();};
+$('tNew').onclick=async()=>{const row=await q(db.from('templates').insert({name:'New template',code:'NEW',category:'Other',ack:false,approved:false,builtin:false,body:TO_INT+subj('Write subject here')+DEAR+'<p>Write your letter here. Use “+ Insert field” to add details like {{designation}} or {{effective_date}}.</p>'}).select().single());state.templates.push(row);T.selId=row.id;renderTplList();$('tName').focus();$('tName').select();};
+
+/* ================= EMPLOYEES ================= */
+const E={editId:null};
+function renderEmployees(){
+  if(!$('eForm').children.length)$('eForm').innerHTML=EMP_FIELDS.map(k=>fieldHTML(k,'','data-e')).join('');
+  const q2=$('eSearch').value.trim().toLowerCase();
+  const list=state.employees.filter(e=>!q2||EMP_FIELDS.some(k=>String(e[k]??'').toLowerCase().includes(q2)));
+  $('eCount').textContent=state.employees.length;
+  $('eBody').innerHTML=list.map(e=>'<tr><td>'+esc(e.emp_code)+'</td><td><b>'+esc([e.salutation,e.employee_name].filter(Boolean).join(' '))+'</b></td><td>'+esc(e.designation)+'</td><td>'+esc(e.department)+'</td><td>'+esc(fmtDate(e.date_of_joining))+'</td><td>'+esc(e.mobile)+'</td><td><div class="row"><button class="btn sm gold" data-use="'+e.id+'">Make letter</button><button class="btn sm ghost" data-edit="'+e.id+'">Edit</button><button class="btn sm danger" data-del="'+e.id+'">✕</button></div></td></tr>').join('')||'<tr><td colspan="7" class="muted">No employees yet. Add above, import a CSV, or save from the Generate form.</td></tr>';
+  $('eBody').querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>{const e=state.employees.find(x=>x.id===b.dataset.use);G.empId=e.id;G.reprintId=null;EMP_FIELDS.forEach(k=>{if(e[k]!=null&&e[k]!=='')G.vals[k]=String(e[k])});showTab('generate');});
+  $('eBody').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const e=state.employees.find(x=>x.id===b.dataset.edit);E.editId=e.id;$('eForm').querySelectorAll('[data-e]').forEach(el=>el.value=e[el.dataset.e]??'');$('eTitle').textContent='Edit employee: '+e.employee_name;window.scrollTo({top:0,behavior:'smooth'});});
+  $('eBody').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{const e=state.employees.find(x=>x.id===b.dataset.del);if(!confirm('Delete '+e.employee_name+'?'))return;await q(db.from('employees').delete().eq('id',e.id));state.employees=state.employees.filter(x=>x.id!==e.id);renderEmployees();});
+}
+function clearEmpForm(){E.editId=null;$('eForm').querySelectorAll('[data-e]').forEach(el=>el.value='');$('eTitle').textContent='Add employee';}
+$('eClear').onclick=clearEmpForm;
+$('eSave').onclick=async()=>{const d={};$('eForm').querySelectorAll('[data-e]').forEach(el=>d[el.dataset.e]=el.value);if(!d.employee_name.trim()){toast('Employee name is required');return;}
+  const data=cleanEmp(d);
+  if(E.editId){const row=await q(db.from('employees').update(data).eq('id',E.editId).select().single());Object.assign(state.employees.find(x=>x.id===E.editId),row);}
+  else{const row=await q(db.from('employees').insert(data).select().single());state.employees.push(row);}
+  clearEmpForm();renderEmployees();toast('Employee saved');};
+$('eSearch').oninput=renderEmployees;
+$('eExport').onclick=()=>{const rows=[EMP_FIELDS.join(',')].concat(state.employees.map(e=>EMP_FIELDS.map(k=>csvCell(e[k])).join(',')));download('volamp-employees.csv','﻿'+rows.join('\n'),'text/csv');};
+$('eImport').onclick=()=>$('eFile').click();
+$('eFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  const rows=parseCSV(await f.text());if(rows.length<2){toast('CSV has no data rows');return;}
+  const norm=s=>String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  const map=rows[0].map(h=>{const n=norm(h);return EMP_FIELDS.find(k=>k===n||norm(label(k))===n)||null;});
+  if(!map.includes('employee_name')){toast('CSV needs an “employee_name” column');return;}
+  const fresh=[];let updated=0;setSync('Importing…');
+  for(const r of rows.slice(1)){const d={};map.forEach((k,i)=>{if(k)d[k]=String(r[i]??'').trim()});if(!d.employee_name)continue;
+    if(d.date_of_joining)d.date_of_joining=normDate(d.date_of_joining);if(d.monthly_ctc)d.monthly_ctc=d.monthly_ctc.replace(/[^0-9.]/g,'');
+    const data=cleanEmp(d);const ex=d.emp_code&&state.employees.find(x=>x.emp_code===d.emp_code);
+    if(ex){await q(db.from('employees').update(data).eq('id',ex.id));updated++;}else fresh.push(data);}
+  if(fresh.length)await q(db.from('employees').insert(fresh));
+  await loadEmployees();renderEmployees();setSync('✔ Synced');toast('Imported: '+fresh.length+' added, '+updated+' updated');};
+
+/* ================= REGISTER ================= */
+function renderRegister(){
+  const s=$('rSearch').value.trim().toLowerCase();
+  const list=state.register.filter(r=>!s||[r.ref,r.employee,r.emp_code,r.tplName,r.signed_by,r.issued_by].some(v=>String(v||'').toLowerCase().includes(s)));
+  $('rCount').textContent=state.register.length;
+  $('rBody').innerHTML=list.map(r=>'<tr><td><b>'+esc(r.ref)+'</b>'+(r.reprints?'<div class="muted">reprinted '+r.reprints+'×</div>':'')+'</td><td>'+esc(fmtDate(r.date))+'</td><td>'+esc(r.employee)+(r.emp_code?'<div class="muted">'+esc(r.emp_code)+'</div>':'')+'</td><td>'+esc(r.tplName)+'</td><td>'+esc(r.signed_by)+'</td><td>'+esc(new Date(r.issued_at).toLocaleString('en-IN'))+'<div class="muted">'+esc(r.issued_by||'')+'</div></td><td><div class="row"><button class="btn sm gold" data-open="'+r.id+'">Open / Reprint</button><button class="btn sm danger" data-rdel="'+r.id+'">✕</button></div></td></tr>').join('')||'<tr><td colspan="7" class="muted">No letters issued yet.</td></tr>';
+  $('rBody').querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{const r=state.register.find(x=>x.id===b.dataset.open);
+    if(!state.templates.find(t=>t.id===r.tplId)){toast('The template for this letter was deleted, so it cannot be reopened.');return;}
+    G.tplId=r.tplId;G.vals={...r.vals};G.reprintId=r.id;G.empId='';showTab('generate');$('gDate').value=r.date;if(state.settings.signatories.find(g=>g.id===r.sigId))$('gSig').value=r.sigId;renderFields();renderPreview();});
+  $('rBody').querySelectorAll('[data-rdel]').forEach(b=>b.onclick=async()=>{const r=state.register.find(x=>x.id===b.dataset.rdel);if(!confirm('Delete register entry '+r.ref+'? This reference number will not be reused.'))return;await q(db.from('letters').delete().eq('id',r.id));state.register=state.register.filter(x=>x.id!==r.id);if(G.reprintId===r.id)G.reprintId=null;renderRegister();});
+}
+$('rSearch').oninput=renderRegister;
+$('rExport').onclick=()=>{const h=['Ref No','Letter Date','Employee','Emp Code','Letter','Signed By','Issued On','Issued By'];const rows=[h.join(',')].concat(state.register.map(r=>[r.ref,r.date,r.employee,r.emp_code,r.tplName,r.signed_by,new Date(r.issued_at).toLocaleString('en-IN'),r.issued_by].map(csvCell).join(',')));download('volamp-letter-register.csv','﻿'+rows.join('\n'),'text/csv');};
+
+/* ================= SETTINGS ================= */
+const S_COMPANY=[['company_name','Company name'],['company_address','Registered address'],['company_phone','Phone'],['company_email','Email'],['company_website','Website'],['company_cin','CIN'],['company_gstin','GSTIN'],['hr_name','HR person name']];
+const S_NUMS=[['ref_prefix','Reference prefix (e.g. VEPL/HR)'],['next_seq','Next letter number'],['basic_pct','Basic salary % of CTC'],['hra_pct','HRA % of Basic']];
+function renderSettings(){
+  const s=state.settings;
+  $('sCompany').innerHTML=S_COMPANY.map(([k,l])=>'<div><label>'+l+'</label>'+(k==='company_address'?'<textarea data-s="'+k+'">'+esc(s[k])+'</textarea>':'<input data-s="'+k+'" value="'+esc(s[k])+'">')+'</div>').join('');
+  $('sNums').innerHTML=S_NUMS.map(([k,l])=>'<div><label>'+l+'</label><input data-s="'+k+'" '+(k==='ref_prefix'?'':'type="number" min="0"')+' value="'+esc(s[k])+'"></div>').join('');
+  document.querySelectorAll('[data-s]').forEach(el=>el.oninput=()=>{const k=el.dataset.s;s[k]=['next_seq','basic_pct','hra_pct'].includes(k)?Number(el.value||0):el.value;if(k==='next_seq')saveNextSeq();else saveSettingsData();refEg();});
+  $('sLogoPrev').src=s.logo||'';$('sLogoPrev').classList.toggle('hidden',!s.logo);
+  refEg();renderSigs();
+}
+function refEg(){const s=state.settings;$('sRefEg').innerHTML='Ref. no. format: <b>'+esc(s.ref_prefix)+'/OFR/'+fy(today())+'/'+String(s.next_seq||1).padStart(3,'0')+'</b> (prefix / letter code / financial year / running number). Salary table: Basic '+s.basic_pct+'% of CTC, HRA '+s.hra_pct+'% of Basic, balance as Special Allowance.';}
+$('sLogo').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;state.settings.logo=await readImage(f,400);saveSettingsData();renderSettings();toast('Logo updated');};
+$('sLogoDel').onclick=()=>{state.settings.logo='';saveSettingsData();renderSettings();};
+const sigTimers={};
+function renderSigs(){
+  const sg=state.settings.signatories;
+  const imgField=(g,i,f,l)=>'<div><label>'+l+'</label><div class="row">'+(g[f]?'<img class="imgprev" src="'+g[f]+'" alt="">':'')+'<input type="file" accept="image/*" data-gi="'+i+'" data-f="'+f+'" style="width:auto">'+(g[f]?'<button class="btn sm ghost" data-gx="'+i+'" data-f="'+f+'">Remove</button>':'')+'</div></div>';
+  $('sSigs').innerHTML=sg.map((g,i)=>'<div class="sigbox"><div class="grid2"><div><label>Name</label><input data-g="'+i+'" data-f="name" value="'+esc(g.name)+'"></div><div><label>Designation</label><input data-g="'+i+'" data-f="designation" value="'+esc(g.designation)+'"></div>'+imgField(g,i,'signature','Signature (PNG with transparent background is best)')+imgField(g,i,'stamp','Company stamp / seal')+'</div><div style="margin-top:10px"><button class="btn sm danger" data-gdel="'+i+'">Delete signatory</button></div></div>').join('')||'<p class="muted">No signatories yet. Add at least one.</p>';
+  $('sSigs').querySelectorAll('[data-g]').forEach(el=>el.oninput=()=>{const g=sg[el.dataset.g];g[el.dataset.f]=el.value;clearTimeout(sigTimers[g.id]);setSync('Saving…');sigTimers[g.id]=setTimeout(()=>q(db.from('signatories').update({name:g.name,designation:g.designation}).eq('id',g.id)).then(()=>setSync('✔ Saved')).catch(()=>{}),700);});
+  $('sSigs').querySelectorAll('[data-gi]').forEach(el=>el.onchange=async e=>{const f=e.target.files[0];if(!f)return;const g=sg[el.dataset.gi];const img=await readImage(f,500);await q(db.from('signatories').update({[el.dataset.f]:img}).eq('id',g.id));g[el.dataset.f]=img;renderSigs();toast('Image saved');});
+  $('sSigs').querySelectorAll('[data-gx]').forEach(el=>el.onclick=async()=>{const g=sg[el.dataset.gx];await q(db.from('signatories').update({[el.dataset.f]:''}).eq('id',g.id));g[el.dataset.f]='';renderSigs();});
+  $('sSigs').querySelectorAll('[data-gdel]').forEach(el=>el.onclick=async()=>{if(!confirm('Delete this signatory?'))return;const g=sg[Number(el.dataset.gdel)];await q(db.from('signatories').delete().eq('id',g.id));sg.splice(Number(el.dataset.gdel),1);renderSigs();});
+}
+$('sAddSig').onclick=async()=>{const row=await q(db.from('signatories').insert({name:'',designation:''}).select().single());state.settings.signatories.push(row);renderSigs();};
+$('sBackup').onclick=()=>download('v-templates-backup-'+today()+'.json',JSON.stringify(state,null,1),'application/json');
+$('sRestore').onclick=()=>$('sFile').click();
+$('sFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  let d;try{d=JSON.parse(await f.text());if(!d||!Array.isArray(d.templates))throw 0;}catch(err){toast('That file is not a valid V Templates backup');return;}
+  if(!confirm('Add the data from this backup to the online database? Existing online data is kept.'))return;
+  try{await importBackup(d);toast('Backup imported');}catch(err){}};
+async function importBackup(d){
+  setSync('Importing…');
+  const {signatories=[],next_seq,...rest}=d.settings||{};
+  Object.assign(state.settings,rest);
+  {const {signatories:_s,next_seq:_n,...data}=state.settings;await q(db.from('settings').update({data}).eq('id',1));}
+  if(Number(next_seq)>Number(state.settings.next_seq||1))await q(db.from('settings').update({next_seq:Number(next_seq)}).eq('id',1));
+  const sigMap={};
+  for(const g of signatories){const ex=state.settings.signatories.find(x=>x.name===g.name&&x.designation===g.designation);
+    if(ex){sigMap[g.id]=ex.id;if(g.signature||g.stamp)await q(db.from('signatories').update({signature:g.signature||ex.signature||'',stamp:g.stamp||ex.stamp||''}).eq('id',ex.id));continue;}
+    const r=await q(db.from('signatories').insert({name:g.name||'',designation:g.designation||'',signature:g.signature||'',stamp:g.stamp||''}).select().single());sigMap[g.id]=r.id;}
+  const tplMap={};
+  for(const t of d.templates){const row={key:t.key||null,name:t.name||'Template',code:t.code||'GEN',category:t.category||'Other',ack:!!t.ack,approved:!!t.approved,approved_by:t.approved_by||'',approved_on:t.approved_on||null,builtin:!!t.builtin,body:t.body||''};
+    const ex=state.templates.find(x=>(t.key&&x.key===t.key)||x.id===t.id);
+    const r=ex?await q(db.from('templates').update(row).eq('id',ex.id).select().single()):await q(db.from('templates').insert(row).select().single());tplMap[t.id]=r.id;}
+  const emps=(d.employees||[]).filter(e=>e.employee_name&&!state.employees.find(x=>(e.emp_code&&x.emp_code===e.emp_code)||x.employee_name===e.employee_name)).map(cleanEmp);
+  if(emps.length)await q(db.from('employees').insert(emps));
+  const lets=(d.register||[]).filter(r=>r.ref).map(r=>({ref_no:r.ref,letter_date:r.date||today(),template_id:tplMap[r.tplId]||null,template_name:r.tplName||'',employee:r.employee||'',emp_code:r.emp_code||'',signatory_id:sigMap[r.sigId]||null,signed_by:r.signed_by||'',vals:r.vals||{},reprints:r.reprints||0,issued_at:r.issued_at||new Date().toISOString()}));
+  if(lets.length)await q(db.from('letters').upsert(lets,{onConflict:'ref_no',ignoreDuplicates:true}));
+  await loadAll();renderSettings();
+}
+$('sResetTpl').onclick=async()=>{const miss=defaultTemplates().filter(d=>!state.templates.find(t=>t.key===d.key));if(!miss.length){toast('All default templates are already present');return;}await q(db.from('templates').insert(miss));await loadTemplates();toast(miss.length+' default template(s) restored');};
+
+/* ================= LOGIN & START ================= */
+function showLogin(msg){$('loading').classList.add('hidden');$('app').classList.add('hidden');$('login').classList.remove('hidden');$('lMsg').textContent=msg||'';}
+async function enter(session){
+  $('login').classList.add('hidden');$('loading').classList.remove('hidden');
+  try{
+    await loadAll();
+    $('who').textContent=session.user.email;
+    $('loading').classList.add('hidden');$('app').classList.remove('hidden');
+    showTab('generate');
+  }catch(e){showLogin('Could not load data: '+(e.message||e)+'. Did you run supabase-setup.sql?');}
+}
+$('lBtn').onclick=async()=>{
+  const email=$('lEmail').value.trim(),password=$('lPass').value;
+  if(!email||!password){$('lMsg').textContent='Enter email and password';return;}
+  $('lBtn').disabled=true;$('lMsg').textContent='Logging in…';
+  const {data,error}=await db.auth.signInWithPassword({email,password});
+  $('lBtn').disabled=false;
+  if(error){$('lMsg').textContent='Login failed: '+error.message;return;}
+  enter(data.session);
+};
+$('lPass').onkeydown=e=>{if(e.key==='Enter')$('lBtn').click();};
+$('logout').onclick=async()=>{await db.auth.signOut();location.reload();};
+$('syncBtn').onclick=async()=>{try{await loadAll();showTab(TABS.find(t=>!$('tab-'+t).classList.contains('hidden'))||'generate');toast('Refreshed from database');}catch(e){}};
+(async function start(){
+  if(SUPABASE_URL.includes('PASTE')||SUPABASE_KEY.includes('PASTE')){showLogin('Setup needed: open index.html, paste your Supabase Project URL and key at the top of the <script> section, then upload again.');$('lBtn').disabled=true;return;}
+  if(!window.supabase){showLogin('Could not load the Supabase library. Check your internet connection and refresh.');return;}
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  const {data:{session}}=await db.auth.getSession();
+  if(session)enter(session);else showLogin();
+  db.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_OUT')showLogin('You have been logged out.');});
+})();
+</script>
+</body>
+</html>
