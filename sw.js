@@ -1,6 +1,6 @@
 /* V Templates service worker – makes the app installable and opens fast.
    Data always comes live from Supabase (never cached). */
-const CACHE = 'vtemplates-v1';
+const CACHE = 'vtemplates-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/volamp-logo.png'];
 
 self.addEventListener('install', e => {

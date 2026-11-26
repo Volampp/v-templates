@@ -98,6 +98,11 @@ create policy "staff full access" on templates   for all to authenticated using 
 create policy "staff full access" on employees   for all to authenticated using (true) with check (true);
 create policy "staff full access" on letters     for all to authenticated using (true) with check (true);
 
+-- 6b) TABLE PERMISSIONS: newer Supabase projects do not grant these automatically
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on table settings, signatories, templates, employees, letters to authenticated;
+revoke all on table settings, signatories, templates, employees, letters from anon;
+
 -- 7) ISSUE LETTER FUNCTION: gives the next reference number safely
 --    (two HR people clicking "Issue" at the same moment never get the same number)
 create or replace function issue_letter(

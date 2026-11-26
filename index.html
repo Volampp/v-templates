@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#7a1f2b">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="V Templates">
 <title>V Templates – Volamp HR Letter Studio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -99,6 +105,17 @@ th{background:#faf6f0;color:var(--m2);font-size:11px;text-transform:uppercase;le
 .userbox button:hover{border-color:var(--g);color:var(--g)}
 #syncState{color:var(--g)}
 .btn:disabled{opacity:.6;cursor:wait}
+@media(max-width:760px){
+  header.top{padding:8px 12px;gap:8px;position:static}
+  nav{margin-left:0;width:100%;overflow-x:auto;flex-wrap:nowrap}
+  nav button{white-space:nowrap;padding:7px 10px;font-size:13px}
+  .userbox{width:100%;justify-content:flex-end}
+  main{padding:10px}
+  .preview-wrap{padding:8px}
+  #gPreview .page{zoom:.46}
+  table{font-size:12px}
+}
+@media print{#gPreview .page{zoom:1}}
 </style>
 </head>
 <body>
@@ -510,6 +527,7 @@ function resolve(k,vals,ctx){
 }
 function letterHTML(t,vals,o){
   const s=state.settings;const sig=s.signatories.find(x=>x.id===o.sigId)||s.signatories[0]||{};
+  const logo=s.logo==='none'?'':(s.logo||'/icons/volamp-logo.png');
   const ctx={company_name:s.company_name,company_address:s.company_address,company_phone:s.company_phone,company_email:s.company_email,hr_name:s.hr_name,ref_no:o.ref,letter_date:fmtDate(o.date),signatory_name:sig.name,signatory_designation:sig.designation};
   const miss=k=>o.forPrint?'__________':'<span class="miss">['+esc(label(k))+']</span>';
   const body=String(t.body).replace(PH_RE,(m,k)=>{const v=resolve(k,vals,ctx);return v==null||v===''?miss(k):v;});
@@ -518,7 +536,7 @@ function letterHTML(t,vals,o){
   const nm=[vals.salutation,vals.employee_name].filter(Boolean).join(' ');
   const ackLine=t.category==='Joining'?'I have received and read this letter and accept the terms and conditions mentioned above.':'I acknowledge receipt of this letter and have understood its contents.';
   return '<div class="page">'+(o.draft?'<div class="wm">DRAFT</div>':'')+
-    '<div class="lh">'+(s.logo?'<img src="'+s.logo+'" alt="">':'')+'<div><div class="cn">'+esc(s.company_name)+'</div><div class="ca">'+esc(s.company_address)+'</div>'+(contact?'<div class="ca">'+contact+'</div>':'')+'</div></div><div class="goldbar"></div>'+
+    '<div class="lh">'+(logo?'<img src="'+logo+'" alt="">':'')+'<div><div class="cn">'+esc(s.company_name)+'</div><div class="ca">'+esc(s.company_address)+'</div>'+(contact?'<div class="ca">'+contact+'</div>':'')+'</div></div><div class="goldbar"></div>'+
     '<div class="meta"><div><b>Ref. No.:</b> '+esc(o.ref||'')+'</div><div><b>Date:</b> '+esc(fmtDate(o.date))+'</div></div>'+
     '<div class="lbody">'+body+'</div>'+
     '<div class="sign"><div>For <b>'+esc(s.company_name)+'</b></div><div class="imgs">'+(sig.signature?'<img class="sig" src="'+sig.signature+'" alt="">':'')+(sig.stamp?'<img class="stamp" src="'+sig.stamp+'" alt="">':'')+'</div><div><b>'+esc(sig.name||'Authorised Signatory')+'</b><br>'+esc(sig.designation||'')+'</div></div>'+
@@ -720,12 +738,12 @@ function renderSettings(){
   $('sCompany').innerHTML=S_COMPANY.map(([k,l])=>'<div><label>'+l+'</label>'+(k==='company_address'?'<textarea data-s="'+k+'">'+esc(s[k])+'</textarea>':'<input data-s="'+k+'" value="'+esc(s[k])+'">')+'</div>').join('');
   $('sNums').innerHTML=S_NUMS.map(([k,l])=>'<div><label>'+l+'</label><input data-s="'+k+'" '+(k==='ref_prefix'?'':'type="number" min="0"')+' value="'+esc(s[k])+'"></div>').join('');
   document.querySelectorAll('[data-s]').forEach(el=>el.oninput=()=>{const k=el.dataset.s;s[k]=['next_seq','basic_pct','hra_pct'].includes(k)?Number(el.value||0):el.value;if(k==='next_seq')saveNextSeq();else saveSettingsData();refEg();});
-  $('sLogoPrev').src=s.logo||'';$('sLogoPrev').classList.toggle('hidden',!s.logo);
+  const lg=s.logo==='none'?'':(s.logo||'/icons/volamp-logo.png');$('sLogoPrev').src=lg;$('sLogoPrev').classList.toggle('hidden',!lg);
   refEg();renderSigs();
 }
 function refEg(){const s=state.settings;$('sRefEg').innerHTML='Ref. no. format: <b>'+esc(s.ref_prefix)+'/OFR/'+fy(today())+'/'+String(s.next_seq||1).padStart(3,'0')+'</b> (prefix / letter code / financial year / running number). Salary table: Basic '+s.basic_pct+'% of CTC, HRA '+s.hra_pct+'% of Basic, balance as Special Allowance.';}
 $('sLogo').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;state.settings.logo=await readImage(f,400);saveSettingsData();renderSettings();toast('Logo updated');};
-$('sLogoDel').onclick=()=>{state.settings.logo='';saveSettingsData();renderSettings();};
+$('sLogoDel').onclick=()=>{state.settings.logo='none';saveSettingsData();renderSettings();};
 const sigTimers={};
 function renderSigs(){
   const sg=state.settings.signatories;
@@ -788,6 +806,7 @@ $('lBtn').onclick=async()=>{
 $('lPass').onkeydown=e=>{if(e.key==='Enter')$('lBtn').click();};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload();};
 $('syncBtn').onclick=async()=>{try{await loadAll();showTab(TABS.find(t=>!$('tab-'+t).classList.contains('hidden'))||'generate');toast('Refreshed from database');}catch(e){}};
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 (async function start(){
   if(SUPABASE_URL.includes('PASTE')||SUPABASE_KEY.includes('PASTE')){showLogin('Setup needed: open index.html, paste your Supabase Project URL and key at the top of the <script> section, then upload again.');$('lBtn').disabled=true;return;}
   if(!window.supabase){showLogin('Could not load the Supabase library. Check your internet connection and refresh.');return;}
